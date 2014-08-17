@@ -45,7 +45,7 @@ This connection should point to the database where you have stored your MSSQL tr
 
 ----------------------------------------------------------------------------------------------------------------------
 !!! !!! !!! You must define a configuration table using the following SQL script !!! !!! !!!
-!!! !!! !!! (YOU WILL HAVE TO REPLACE "research" WITH WHATEVER YOU DATABASE NAME YOU ARE USING) !!! !!! !!!
+YOU WILL HAVE TO REPLACE "research" WITH WHATEVER YOU DATABASE NAME YOU ARE USING
 ----------------------------------------------------------------------------------------------------------------------
 USE [research]
 GO
