@@ -48,29 +48,50 @@ This connection should point to the database where you have stored your MSSQL tr
 YOU WILL HAVE TO REPLACE "research" WITH WHATEVER YOU DATABASE NAME YOU ARE USING
 ----------------------------------------------------------------------------------------------------------------------
 USE [research]
-GO
-/****** Object:  Table [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG]    Script Date: 8/17/2014 6:10:16 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_PADDING ON
-GO
-CREATE TABLE [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG](
-	[CONFIG_NAME] [varchar](MAX) NULL,
-	[CONFIG_VALUE] [varchar](MAX) NULL
-) ON [PRIMARY]
 
 GO
+
+/****** Object:  Table [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG]    Script Date: 8/17/2014 6:10:16 PM ******/
+
+SET ANSI_NULLS ON
+
+GO
+
+SET QUOTED_IDENTIFIER ON
+
+GO
+
+SET ANSI_PADDING ON
+
+GO
+
+CREATE TABLE [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG](
+
+	[CONFIG_NAME] [varchar](MAX) NULL,
+	
+	[CONFIG_VALUE] [varchar](MAX) NULL
+	
+) ON [PRIMARY]
+
+
+GO
+
 SET ANSI_PADDING OFF
+
 GO
+
 INSERT [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG] ([CONFIG_NAME], [CONFIG_VALUE]) VALUES (N'SUPPORT_THRESHOLD', N'500')
+
 GO
+
 INSERT [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG] ([CONFIG_NAME], [CONFIG_VALUE]) VALUES (N'RULE_DEPTH_LIMIT', N'5')
+
 GO
+
 INSERT [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG] ([CONFIG_NAME], [CONFIG_VALUE]) VALUES (N'HISTORY_LIMIT', N'50')
+
 GO
-----------------------------------------------------------------------------------------------------------------------
+
 ----------------------------------------------------------------------------------------------------------------------
 
 When the application deploys, it will start analyzing the trace automatically, using the values from your config table.
