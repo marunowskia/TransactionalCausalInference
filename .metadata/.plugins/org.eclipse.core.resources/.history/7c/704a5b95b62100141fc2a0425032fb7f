@@ -1,0 +1,191 @@
+package oss.marunowskia.datamining.transactionalcaualinference.utilities;
+
+import java.util.Hashtable;
+import java.util.LinkedList;
+
+import org.apache.log4j.Logger;
+import org.hibernate.event.spi.PreDeleteEvent;
+
+import oss.marunowskia.datamining.transactionalcaualinference.models.AssociationRuleNode;
+import oss.marunowskia.datamining.transactionalcaualinference.models.TransactionBoundary;
+import oss.marunowskia.datamining.transactionalcaualinference.models.AssociationRuleNode.DuplicateEvidenceException;
+import oss.marunowskia.datamining.transactionalcaualinference.models.TransactionBoundary.EventType;
+
+/**
+ * A SequenceAnalyzer takes a sequence of objects, each of which is 
+ * @author Alex
+ *
+ */
+public class SequenceAnalyzer {
+	
+	private Logger logger = Logger.getLogger(SequenceAnalyzer.class);
+
+	private Hashtable<Long, AssociationRuleNode> associationRuleRoots = new Hashtable<Long, AssociationRuleNode>();
+	
+	// This LinkedList is used for tracking the head SequenceNode, tail SequenceNode, and depth with very little code
+	// SequenceNode is used simply for convenient recursive traversal through the sequence, without having to deal with iterators or indices
+	private LinkedList<SequenceNode> sequence = new LinkedList<>();
+	private int historyLimit;
+	
+	private Hashtable<Object, SequenceNode> nodeLookup = new Hashtable<Object, SequenceNode>();
+	
+	
+	private int deepestAssociationRule = 1;
+
+	private int ruleDepthLimit;
+	private int trackedDepthRatio;
+	private int supportThreshold;
+	private int threadLimit;
+	private int threadCount;
+
+	public SequenceAnalyzer() {
+		// Reasonable default values...
+		historyLimit = 50;
+		ruleDepthLimit = 4;
+		supportThreshold = 600;
+	}
+	
+	public SequenceAnalyzer(Hashtable<String, String> config) {
+		// TODO: Load config values from hashtable, or pass in as parameters
+	}
+	
+	public void recordEvent(Object eventSource, long eventType) {
+		SequenceNode sequenceNode = new SequenceNode();
+		sequenceNode.setNodeType(eventType);
+		sequenceNode.setEventSource(eventSource);
+		recordSequenceNode(sequenceNode);
+	}
+
+	public void analyzeEvent(Object eventSource, boolean eventLabel) {
+		SequenceNode correspondingSequenceNode = nodeLookup.get(eventSource);
+		if(correspondingSequenceNode == null) {
+			return;
+		}
+		analyzeSequenceNode(correspondingSequenceNode, eventLabel);		
+	}
+	
+	private void recordSequenceNode(SequenceNode sequenceNode) {
+		
+		sequenceNode.setPreviousNode(sequence.peekFirst());
+		sequence.addFirst(sequenceNode);
+		nodeLookup.put(sequenceNode.getEventSource(), sequenceNode);
+		
+		// Remove oldest events from our list until we have a sufficiently small list 
+		while(sequence.size() > getHistoryLimit()) {
+			SequenceNode lastNode = sequence.removeLast();
+			nodeLookup.remove(lastNode.getEventSource(), lastNode);
+		}
+		
+		// Remove a single back-reference so that all the removed sequenceNodes can be garbage collected. 
+		SequenceNode tail = sequence.peekLast();
+		if(tail!=null) {
+			tail.setPreviousNode(null);
+		}
+	}
+	
+	/**
+	 * Explores all reasonable subsequences that start from sequenceNode. This should only be called once per event.
+	 * @param sequenceNode
+	 * @param eventLabel
+	 */
+	private void analyzeSequenceNode(SequenceNode sequenceNode, boolean eventLabel) {
+		
+		AssociationRuleNode associationRuleNode = getRootAssociationRuleNode(sequenceNode.getEventType());
+		depthFirstSequenceTraversal(sequenceNode, associationRuleNode, eventLabel, sequenceNode.getEventSource());
+	}
+	
+
+	private long numberOfRules = 0;
+	private SequenceNode depthFirstSequenceTraversal(SequenceNode startingPoint, AssociationRuleNode currentRuleNode, boolean positiveExample, Object eventSource) {
+		
+		validateDepthFirstSearchTraversalParameters(currentRuleNode, eventSource);
+		
+		if(startingPoint == null) {
+			return null;
+		}
+		
+		if(currentRuleNode.incrementSupport(positiveExample, eventSource ) == -1) {
+			return null;
+		}
+		
+		// Check the support threshold and depth limit to make sure we don't waste time/memory exploring nodes that aren't interesting
+		if(currentRuleNode.getSupport() >= getSupportThreshold() && currentRuleNode.getDepth() < getRuleDepthLimit()) {
+			SequenceNode nextNodeToExpand = startingPoint.getPreviousNode();
+			// Once this hits a null, we have finished exploring all desired subsequences of this node. 
+			while(nextNodeToExpand != null) {
+				long nextNodeType = nextNodeToExpand.getEventType();
+				AssociationRuleNode deeperAssociationRuleNode = currentRuleNode.getSubsequences().get(nextNodeType);
+				
+				if(deeperAssociationRuleNode == null) {
+					deeperAssociationRuleNode = new AssociationRuleNode();
+					deeperAssociationRuleNode.setEventType(nextNodeType);
+					deeperAssociationRuleNode.setDepth(currentRuleNode.getDepth()+1);
+					if(++numberOfRules%1000 == 0) {
+						System.out.println("Have " + numberOfRules + " rules");
+					}
+					deeperAssociationRuleNode.setParentAssociationRule(currentRuleNode);
+					currentRuleNode.getSubsequences().put(nextNodeType, deeperAssociationRuleNode);
+				}
+				nextNodeToExpand = depthFirstSequenceTraversal(nextNodeToExpand, deeperAssociationRuleNode, positiveExample, eventSource);
+			}
+		}
+		
+		// Done searching subsequences of "startingPoint". 
+		// Pass "the preceding event" to the callee so that it can analyze subsequences which EXCLUDE "startingPoint"
+		return startingPoint.getPreviousNode();
+	}
+
+	private void validateDepthFirstSearchTraversalParameters(
+			AssociationRuleNode currentRuleNode, Object eventSource) {
+		if(currentRuleNode == null) {
+			throw new IllegalArgumentException("currentRuleNode may not be null");
+		}
+		
+		if(eventSource == null) {
+			
+		}
+	}
+	
+	private AssociationRuleNode getRootAssociationRuleNode(long eventType) {
+		if(associationRuleRoots.containsKey(eventType)) {
+			return associationRuleRoots.get(eventType);
+		}
+		else {
+			AssociationRuleNode associationRuleNode = new AssociationRuleNode();
+			associationRuleNode.setDepth(0);
+			associationRuleNode.setEventType(eventType);
+			associationRuleRoots.put(eventType, associationRuleNode);
+			return associationRuleNode;
+		}
+	}
+
+	public void reportAssociationRules() {
+		AssociationRuleReportingUtility.reportAssociationRuleStatistics(associationRuleRoots, supportThreshold);
+	}
+	
+	
+	public int getHistoryLimit() {
+		return historyLimit;
+	}
+
+	public void setHistoryLimit(int historyLimit) {
+		this.historyLimit = historyLimit;
+	}
+
+	public int getRuleDepthLimit() {
+		return ruleDepthLimit;
+	}
+
+	public void setRuleDepthLimit(int ruleDepthLimit) {
+		this.ruleDepthLimit = ruleDepthLimit;
+	}
+
+	public int getSupportThreshold() {
+		return supportThreshold;
+	}
+
+	public void setSupportThreshold(int supportThreshold) {
+		this.supportThreshold = supportThreshold;
+	}
+
+}

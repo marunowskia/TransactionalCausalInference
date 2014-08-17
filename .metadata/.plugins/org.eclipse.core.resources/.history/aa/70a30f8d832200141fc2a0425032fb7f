@@ -1,0 +1,19 @@
+package oss.marunowskia.datamining.transactionalcausalinference.demo;
+
+import org.jboss.logging.Logger;
+
+public class CausalInferenceDemo {
+
+	Logger logger = Logger.getLogger(CausalInferenceDemo.class);
+	
+	public void runDemo() {
+		logger.info("Starting TransactionalCausalInferenceDemo.");
+		
+//		NonTransactionalDemo.runDemo();
+//		TransactionalDemo.runDemo();
+//		NoisyTransactionalDemo.runDemo();
+		
+		MarkovModelDemo markovModelDemo = new MarkovModelDemo();
+		markovModelDemo.runDemo();
+	}
+}

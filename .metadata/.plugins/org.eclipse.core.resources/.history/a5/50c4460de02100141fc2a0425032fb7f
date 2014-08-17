@@ -1,0 +1,116 @@
+package oss.marunowskia.datamining.transactionalcausalinference.utilities;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.TreeSet;
+
+import org.apache.log4j.Logger;
+
+import oss.marunowskia.datamining.transactionalcausalinference.models.TraceData;
+import oss.marunowskia.datamining.transactionalcausalinference.models.Transaction;
+import oss.marunowskia.datamining.transactionalcausalinference.models.TransactionBoundary;
+import oss.marunowskia.datamining.transactionalcausalinference.models.TransactionBoundary.EventType;
+
+public class TransactionScanner implements TraceDataReader{
+
+	private Logger logger = Logger.getLogger(TransactionScanner.class);
+	
+	private TreeSet<TransactionBoundary> sortedEndBoundaries = new TreeSet<TransactionBoundary>(TransactionBoundaryComparator.COMPARATOR);
+	private TransactionSequenceAnalyzer2 transactionSequenceAnalyzer;
+
+	public TransactionScanner(Hashtable<String, String> config) {
+		
+		transactionSequenceAnalyzer = new TransactionSequenceAnalyzer2();
+		
+		transactionSequenceAnalyzer.setHistoryLimit(		safeGetInt(config, "HISTORY_LIMIT"));
+		transactionSequenceAnalyzer.setRuleDepthLimit(		safeGetInt(config, "RULE_DEPTH_LIMIT"));
+		transactionSequenceAnalyzer.setSupportThreshold(	safeGetInt(config, "SUPPORT_THRESHOLD"));
+		transactionSequenceAnalyzer.setTrackedDepthRatio(	safeGetInt(config, "HISTORY_DEPTH_TO_RULE_DEPTH_RATIO"));
+		transactionSequenceAnalyzer.setThreadLimit(			safeGetInt(config, "THREAD_LIMIT"));
+		
+	}
+
+	private int safeGetInt(Hashtable<String, String> configTable, String configName) {
+		if(!configTable.containsKey(configName)) {
+			throw new IllegalArgumentException("Missing config row: " + configName);
+		}
+		try {
+			return Integer.parseInt(configTable.get(configName));  
+		} catch(NumberFormatException e) {
+			throw new IllegalArgumentException("Invalid integer format for " + configName + ": " + configTable.get(configName));
+		}
+	}
+
+	/**
+	 * Note: traceData must be sorted by StartDate
+	 * @param traceData
+	 */
+	@Override
+	public void readTraceData(List<TraceData> traceDataList) {
+		for(TraceData traceData : traceDataList) {
+			Transaction transaction = createTransaction(traceData);
+			sortedEndBoundaries.add(transaction.getEndBoundary());
+			Date traceDataStart = traceData.getStartTime();
+			while(traceDataStart.after(sortedEndBoundaries.first().getDate())) {
+				processTransactionBoundary(sortedEndBoundaries.pollFirst());
+			}
+			processTransactionBoundary(transaction.getStartBoundary());
+		}
+		transactionSequenceAnalyzer.reportAssociationRules();
+	}
+	
+	
+	// NOTE: This is exposed to the outside world so that this algorithm can be used as an online application, rather than only using pre-recorded traces.
+	public void processTransactionBoundary(TransactionBoundary transactionBoundary) {
+		enforceMonotonicity(transactionBoundary.getDate());
+		transactionSequenceAnalyzer.processObservedTransactionBoundary(transactionBoundary);
+	}
+
+	
+	private Date previousDate;
+	private void enforceMonotonicity(Date newDate) {
+		if(previousDate != null) {
+			if(newDate.before(previousDate)) {
+				throw new IllegalArgumentException("Non-monotonic date observed on a TransactionBoundary");
+			}
+		}
+		previousDate = newDate; 
+	}
+	
+	// These methods could reasonably be moved to a utility class
+	private static Transaction createTransaction(TraceData traceData) {
+		Transaction transaction = new Transaction();
+		transaction.setStartDate(traceData.getStartTime());
+		transaction.setEndDate(traceData.getEndTime());
+		transaction.setOptionalTextInformation(traceData.getTextData());
+		transaction.setTransactionId(traceData.getRowNumber());
+		transaction.setTransactionType(QueryTextClassifier.classifyQuery(traceData.getTextData()));
+		transaction.setStartBoundary(createStartBoundary(transaction));		
+		transaction.setEndBoundary(createEndBoundary(transaction));
+		transaction.setDuration(traceData.getDuration());
+		return transaction;
+	}
+	
+	private static TransactionBoundary createStartBoundary(Transaction transaction) {
+		TransactionBoundary startBoundary = new TransactionBoundary();
+		startBoundary.setDate(transaction.getStartDate());
+		startBoundary.setTransaction(transaction);
+		startBoundary.setEventType(EventType.TRANSACTION_START);
+		return startBoundary;
+	}
+	
+	private static TransactionBoundary createEndBoundary(Transaction transaction) {
+		TransactionBoundary endBoundary = new TransactionBoundary();
+		endBoundary.setDate(transaction.getEndDate());
+		endBoundary.setTransaction(transaction);
+		endBoundary.setEventType(EventType.TRANSACTION_END);
+		return endBoundary;
+	}
+	
+	public void reportResults() {
+		transactionSequenceAnalyzer.reportAssociationRules();
+	}
+}

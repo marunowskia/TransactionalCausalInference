@@ -1,0 +1,9 @@
+package oss.marunowskia.datamining.transactionalcausalinference.utilities;
+
+import java.util.List;
+
+import oss.marunowskia.datamining.transactionalcausalinference.models.TraceData;
+
+public interface TraceDataReader {
+	public void readTraceData(List<TraceData> traceData);
+}

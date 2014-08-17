@@ -1,0 +1,11 @@
+package oss.marunowskia.datamining.transactionalcausalinference.utilities;
+
+import oss.marunowskia.datamining.transactionalcausalinference.models.TransactionBoundary;
+
+public class TransactionGraphAnalyzer {
+
+	public void recordObservation(TransactionBoundary endBoundary) {
+		
+	}
+
+}

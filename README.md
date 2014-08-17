@@ -37,36 +37,31 @@
 <br>	)
 <br>	
 <br>	============================
-<br>	********************************************************
+<br>	
 <br>	Running this project with JEE:
-<br>	********************************************************
+<br>	
 <br>	
 <br>	The project itself can be imported as an Eclipse project.
 <br>	
 <br>	The application itself should deploy on any Java EE 7 application-server, however, I have only tested it using Wildfly 8.0
 <br>	
 <br>	============================
-<br>	********************************************************
+<br>	
 <br>	Analyzing database trace results:
-<br>	********************************************************
 <br>	
 <br>	
 <br>	When analyzing a SQL-Server database trace, the trace will have to be stored in a table for ease of retrieval.
 <br>	
-<br>	(
-<br>	
+<br>	(	
 <br>	Disclaimer: It is inadvisable to write the results of a MSSQL trace back to the database on which the trace is running.
-<br>	  
-<br>	  Best case scenario, you'll get a non-characteristic sample of your database transactions.
-<br>	  
-<br>	  Worst case scenario, you crash your server :)
-<br>	  
+<br>		Best case scenario, you'll get a non-characteristic sample of your database transactions.
+<br>		Worst case scenario, you crash your server :)
 <br>	)
 <br>	
 <br>	To analyze your trace data, you will need to specify a database connection in your standalone.xml.
 <br>	This connection should point to the database where you have stored your MSSQL trace.
 <br>	
-<br>	!!! The project expects the trace data to be located in "resesarch.dbo.full_trace", but this may be changed directly to wherever your trace data is stored. !!!
+<br>	!!!!! The project expects the trace data to be located in "resesarch.dbo.full_trace", but this may be changed directly to wherever your trace data is stored.
 <br>	
 <br>	
 <br>	----------------------------------------------------------------------------------------------------------------------
@@ -131,9 +126,10 @@ GO
 <br>	
 <br>	
 <br>	============================
-<br>	********************************************************
+<br>	
 <br>	Background:
-<br>	********************************************************
+<br>	
+<br>	
 <br>	This project sprang forth from annecdotal evidence of unexpected contention between transactions in our SQL-Server database.
 <br>	
 <br>	I desired a tool which could provide quantitative observations on the degree to which pairs of transactions affect each other.

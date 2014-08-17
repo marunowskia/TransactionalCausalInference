@@ -1,0 +1,178 @@
+package oss.marunowskia.datamining.transactionalcausalinference.utilities.transactions;
+
+import java.util.Hashtable;
+import java.util.LinkedList;
+
+import oss.marunowskia.datamining.transactionalcausalinference.models.AssociationRuleNode;
+import oss.marunowskia.datamining.transactionalcausalinference.models.TransactionBoundary;
+import oss.marunowskia.datamining.transactionalcausalinference.models.AssociationRuleNode.DuplicateEvidenceException;
+import oss.marunowskia.datamining.transactionalcausalinference.models.TransactionBoundary.EventType;
+
+public class TransactionSequenceAnalyzer2 {
+
+	private Hashtable<Long, AssociationRuleNode> associationRuleRoots = new Hashtable<Long, AssociationRuleNode>();
+	private LinkedList<TransactionBoundary> transactionHistorySequence = new LinkedList<TransactionBoundary>();
+	private OutlierDetector onlineStatistics = new OutlierDetector();
+	private int deepestAssociationRule = 1;
+
+	private int historyLimit;
+	private int ruleDepthLimit;
+	private int trackedDepthRatio;
+	private int supportThreshold;
+	private int threadLimit;
+	private int threadCount;
+
+	public TransactionSequenceAnalyzer2() {
+		// Reasonable default values...
+		historyLimit = 200;
+		ruleDepthLimit = 30;
+		trackedDepthRatio = 5;
+		supportThreshold = 200;
+		threadLimit = 4;
+		threadCount = 0;
+	}
+
+
+	public void processObservedTransactionBoundary(TransactionBoundary transactionBoundary) {
+
+		appendTransactionBoundary(transactionBoundary);
+		if(transactionBoundary.getEventType()==EventType.TRANSACTION_START) {
+			return;
+		}
+
+		// Simulate the restriction that we did not have the transaction duration available to us when the transaction started, 
+		// so we have to mine the association rules for transaction starts after the transaction finishes.
+		// TODO: REENABLE ONCE THE DUPLICATE EVIDENCE CAUSE IS DISCOVERED 		analyzeTransactionBoundary(transactionBoundary.getTransaction().getStartBoundary(), transactionBoundary.getTransaction().getDuration());
+		analyzeTransactionBoundary(transactionBoundary, transactionBoundary.getTransaction().getDuration());
+	}
+
+	private void appendTransactionBoundary(TransactionBoundary transactionBoundary) {
+		transactionBoundary.setPreviousTransactionBoundary(transactionHistorySequence.peekLast());
+		transactionHistorySequence.addLast(transactionBoundary);
+		// TODO: DETERMINE WHY USING A DYNAMICALLY GROWING HISTORY LIMIT RESULTS IN RAPID EXPLOSION OF THE DEPTH OF THE ASSOCIATION RULE NODES. WOULD SIMPLY REQUIRE THE RATE AT WHICH THE HISTORY LIMIT GROWS TO OUTPACE THE RATE AT WHICH TRANSACTIONS GET REMOVED, SO THAT HISTORY BECOMES ARBITRARILY LONG, THEREBY ALLOWING EACH INSTANCE OF A TRANSACTION TO UPDATE ALL SUBSEQUENCES UNDER THAT 
+		// TODO: DETERMINE A WAY TO PREVENT THE "ESCAPE VELOCITY" FOR HISTORY LIMIT GROWTH FROM BEING REACHED.
+		// TODO: WITH A LOW ENOUGH HISTORY LIMIT, IT PROBABLY DOESN'T MAKE SENSE TO BOTHER WITH THE DYNAMICALLY GROWING HISTORY LIMIT 
+		while(transactionHistorySequence.size()>Math.min(historyLimit, deepestAssociationRule*trackedDepthRatio)) {
+
+			// Remove this object from the list and remove its references to other objects. 
+			// There is probably an off-by-one bug here, but it has no real consequences: just one extra object in memory.
+			// Really, the object that should have setNextTransactionBoundary(null) called should be the second-earliest event in our sequence, as the first is the one that is getting removed.
+			transactionHistorySequence.removeFirst().setPreviousTransactionBoundary(null);
+		}	
+	}
+
+	private void analyzeTransactionBoundary(final TransactionBoundary transactionBoundary, long duration) {
+		long transactionType = transactionBoundary.getTypeId();
+		long transactionDuration = transactionBoundary.getTransaction().getDuration();
+		final boolean eventOfInterest = onlineStatistics.recordObservation(transactionType, transactionDuration);
+		final AssociationRuleNode rootAssociationRuleNode = getRootAssociationRuleNode(transactionBoundary.getTypeId());
+		enumerateTransactionSubsequences(eventOfInterest, rootAssociationRuleNode, transactionBoundary);
+	}
+
+	private AssociationRuleNode getRootAssociationRuleNode(long transactionTypeId) {
+		if(associationRuleRoots.containsKey(transactionTypeId)) {
+			return associationRuleRoots.get(transactionTypeId);
+		}
+		else {
+			AssociationRuleNode associationRuleNode = new AssociationRuleNode();
+			associationRuleNode.setDepth(0);
+			associationRuleNode.setEventType(transactionTypeId);
+			associationRuleRoots.put(transactionTypeId, associationRuleNode);
+			return associationRuleNode;
+		}
+	}
+
+	private void enumerateTransactionSubsequences(boolean eventOfInterest, AssociationRuleNode rule, TransactionBoundary currentTransactionBoundary) {
+
+		if(currentTransactionBoundary == null || rule == null) {
+			return;
+		}
+
+		// Every time we arrive at a node in our rule-tree, increment that rule's support with the appropriate.
+		// If we already incremented this node as a result of this event, stop processing on this node
+		if(rule.incrementSupport(eventOfInterest, currentTransactionBoundary.getTransaction()) == -1) {
+			return;
+		}
+
+
+		TransactionBoundary priorTransactionBoundary = currentTransactionBoundary.getPreviousTransactionBoundary();
+		if(priorTransactionBoundary == null) {
+			return;
+		}
+
+		if(rule.getSupport() >= supportThreshold) {
+			analyzePriorEvent(eventOfInterest, rule, priorTransactionBoundary);
+			analyzePriorEvent(eventOfInterest ,rule, priorTransactionBoundary.getPreviousTransactionBoundary());
+		}
+	}
+
+	private void analyzePriorEvent(boolean eventOfInterest, AssociationRuleNode parentAssociationRuleNode, TransactionBoundary newEvent) {
+
+		if(newEvent == null || parentAssociationRuleNode == null) {
+			return;
+		}
+
+		AssociationRuleNode childAssociationRuleNode = parentAssociationRuleNode.getSubsequences().get(newEvent.getTypeId());
+		if(childAssociationRuleNode == null) {
+			childAssociationRuleNode = new AssociationRuleNode();
+			childAssociationRuleNode.setDepth(parentAssociationRuleNode.getDepth()+1);
+			childAssociationRuleNode.setEventType(newEvent.getTypeId());
+			parentAssociationRuleNode.getSubsequences().put(newEvent.getTypeId(), childAssociationRuleNode);
+		}
+		enumerateTransactionSubsequences(eventOfInterest, childAssociationRuleNode, newEvent);
+	}
+
+
+	public void reportAssociationRules() {
+		AssociationRuleReportingUtility.reportAssociationRuleStatistics(associationRuleRoots, supportThreshold);
+	}
+	
+	
+	public int getHistoryLimit() {
+		return historyLimit;
+	}
+
+	public void setHistoryLimit(int historyLimit) {
+		this.historyLimit = historyLimit;
+	}
+
+	public int getRuleDepthLimit() {
+		return ruleDepthLimit;
+	}
+
+	public void setRuleDepthLimit(int ruleDepthLimit) {
+		this.ruleDepthLimit = ruleDepthLimit;
+	}
+
+	public int getTrackedDepthRatio() {
+		return trackedDepthRatio;
+	}
+
+	public void setTrackedDepthRatio(int trackedDepthRatio) {
+		this.trackedDepthRatio = trackedDepthRatio;
+	}
+
+	public int getSupportThreshold() {
+		return supportThreshold;
+	}
+
+	public void setSupportThreshold(int supportThreshold) {
+		this.supportThreshold = supportThreshold;
+	}
+
+	public int getThreadLimit() {
+		return threadLimit;
+	}
+
+	public void setThreadLimit(int threadLimit) {
+		this.threadLimit = threadLimit;
+	}
+
+	public int getThreadCount() {
+		return threadCount;
+	}
+
+	public void setThreadCount(int threadCount) {
+		this.threadCount = threadCount;
+	}
+}

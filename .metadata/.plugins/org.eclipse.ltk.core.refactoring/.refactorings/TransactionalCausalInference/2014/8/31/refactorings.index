@@ -1,0 +1,17 @@
+1406855343288	Delete element
+1406855434047	Delete element
+1406855440067	Delete elements
+1406855442341	Delete element
+1406855466062	Delete element
+1406855653106	Delete element
+1406855674026	Delete element
+1406861879678	Delete element
+1407004133214	Rename field 'transactionType'
+1407004139437	Rename method 'getTransactionType'
+1407004143502	Rename method 'setTransactionType'
+1407004146345	Rename method 'setSetType'
+1407004151142	Rename local variable 'transactionType'
+1407004174131	Rename field 'lastObservedTransation'
+1407004243998	Rename method 'getLastObservedTransation'
+1407006114245	Rename type 'OnlineStatistics'
+1407015235013	Rename type 'TransactionSequenceAnalyzer3'

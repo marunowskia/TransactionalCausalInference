@@ -1,0 +1,36 @@
+package oss.marunowskia.datamining.transactionalcausalinference;
+
+import java.util.Hashtable;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.inject.Inject;
+
+import org.apache.log4j.Logger;
+
+import oss.marunowskia.datamining.transactionalcaualinference.demo.FixedSequenceDemo;
+import oss.marunowskia.datamining.transactionalcaualinference.utilities.*;
+
+@Singleton
+@Startup
+public class StartupSequence {
+
+	Logger logger = Logger.getLogger(StartupSequence.class);
+	@Inject
+	DatabaseUtililty databaseUtility;
+	
+	@PostConstruct
+	public void startupSequence() {
+
+//		logger.info("StartupSequence initiated");
+//		
+		Hashtable<String, String> config = databaseUtility.getConfig();
+		TransactionScanner transactionScanner = new TransactionScanner(config);
+		databaseUtility.fetchSortedTraceDataBatches(transactionScanner);
+		transactionScanner.reportResults();
+		
+//		FixedSequenceDemo demo = new FixedSequenceDemo();
+//		demo.runDemo(500000);
+	}
+}

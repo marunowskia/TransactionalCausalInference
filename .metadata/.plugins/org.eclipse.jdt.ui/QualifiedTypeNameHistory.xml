@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcaualinference.utilities.TransactionBoundaryComparator"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcaualinference.utilities.TransactionSequenceAnalyzer3"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcaualinference.models.TransactionBoundary"/>
+<fullyQualifiedTypeName name="java.util.Hashtable"/>
+<fullyQualifiedTypeName name="java.util.logging.Logger"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcaualinference.utilities.SequenceNode"/>
+<fullyQualifiedTypeName name="org.hibernate.event.spi.PreDeleteEvent"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcaualinference.utilities.SequenceAnalyzer"/>
+<fullyQualifiedTypeName name="java.beans.EventSetDescriptor"/>
+<fullyQualifiedTypeName name="com.sun.rmi.rmid.ExecOptionPermission"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcaualinference.models.AssociationRuleNode.DuplicateEvidenceException"/>
+<fullyQualifiedTypeName name="java.lang.IllegalArgumentException"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcaualinference.models.AssociationRuleNode"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcaualinference.demo.FixedSequenceDemo"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcausalinference.utilities.transactions.WelfordStatistics"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcausalinference.models.SequenceNode"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcausalinference.utilities.transactions.TransactionScanner"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcausalinference.utilities.transactions.TraceDataReader"/>
+<fullyQualifiedTypeName name="org.apache.log4j.Logger"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcausalinference.demo.MarkovModelDemo"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcausalinference.demo.CausalInferenceDemo"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcausalinference.utilities.sequences.SequenceAnalyzer"/>
+<fullyQualifiedTypeName name="oss.marunowskia.datamining.transactionalcausalinference.demo.FixedSequenceDemo"/>
+<fullyQualifiedTypeName name="java.lang.IllegalStateException"/>
+<fullyQualifiedTypeName name="javax.ejb.Schedule"/>
+<fullyQualifiedTypeName name="java.util.Date"/>
+<fullyQualifiedTypeName name="java.util.HashMap"/>
+<fullyQualifiedTypeName name="java.util.TreeSet"/>
+</qualifiedTypeNameHistroy>

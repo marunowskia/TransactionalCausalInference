@@ -1,0 +1,51 @@
+package oss.marunowskia.datamining.transactionalcausalinference.utilities.transactions;
+
+public class WelfordStatistics {
+	
+	// TODO: DETERMINE WHETHER OR NOT THE STANDARD DEVIATION APPROACH HERE IS AN APPROXIMATION OR NOT. 
+	// XXX: WHEN I WENT THROUGH IT BY HAND, MY FINAL DIVISOR WAS N*N, NOT N*(N-1) AS I HAD EXPECTED.
+	// I HAVE ALREADY PROVEN (proof not included in project) THAT THE VALUE FOR MEAN WOULD GIVE THE EXACT SAME OUTPUT IF FLOATING POINT ERRORS WERE NOT PRESENT.
+	
+	// This class uses the Welford method for computing a running standard deviation on a stream of real values.
+	// http://www.johndcook.com/standard_deviation.html
+	
+	double sum;
+	double sumOfSquares;
+	
+	double previousM;
+	double nextM;
+	double previousS;
+	double nextS;
+	
+	long numberOfObservations;
+	
+	public void recordObservedValue(double value) {
+		numberOfObservations++;
+		sum += value;
+		
+		if(numberOfObservations==1) {
+			previousM = nextM = value;
+			previousS = 0;
+		}
+		else {
+			nextM = previousM + (value - previousM) / numberOfObservations; // Modify the mean by the amount contributed by the new observation
+			nextS = previousS + (value - previousM) * (value - nextM); // Modify the variance by the amount contributed by the new observation
+		}
+		
+		previousM = nextM;
+		previousS = nextS;
+	}
+	
+	public double getStandardDeviation() {
+		return Math.sqrt(getVariance());
+	}
+	
+	public double getMean() {
+		return sum/numberOfObservations;
+	}
+	
+	public double getVariance() {
+		return numberOfObservations > 1 ? nextS / (numberOfObservations - 1) : 0.0;
+	}
+	
+}
