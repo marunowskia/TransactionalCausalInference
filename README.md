@@ -25,7 +25,7 @@ For a demo of how this project looks when it runs, simply run the main method in
 
 ============================
 
-Using this project to analyze a database trace:
+Running this project without JEE:
 
 
 (
@@ -36,10 +36,20 @@ If  you wish to run this project as a raw Java application, you will have to mod
 2) StartupSequence.java
 )
 
+============================
+
+Running this project with JEE:
+
 
 The project itself can be imported as an Eclipse project.
 
 The application itself should deploy on any Java EE 7 application-server, however, I have only tested it using Wildfly 8.0
+
+============================
+
+Analyzing database trace results:
+
+
 
 When analyzing a SQL-Server database trace, the trace will have to be stored in a table for ease of retrieval.
 (
@@ -52,9 +62,13 @@ This connection should point to the database where you have stored your MSSQL tr
 
 !!! The project expects the trace data to be located in "resesarch.dbo.full_trace", but this may be changed directly to wherever your trace data is stored. !!!
 
+
 ----------------------------------------------------------------------------------------------------------------------
-!!! !!! !!! You must define a configuration table using the following SQL script !!! !!! !!!
+
+You must define a configuration table using the following SQL script
+
 You will have to replace "research" with the name of the database that holds your trace data
+
 ----------------------------------------------------------------------------------------------------------------------
 USE [research]
 
