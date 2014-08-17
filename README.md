@@ -28,7 +28,16 @@ For a demo of how this project looks when it runs, simply run the main method in
 Using this project to analyze a database trace:
 
 
-This application deploys as a WAR file. The project itself can be imported as an Eclipse project.
+(
+For brevity... while still using Java, that is... this project is implemented as a Java EE 7 deployable web-archive. This is primarily for the convenience of using hibernate for ORM.
+
+If  you wish to run this project as a raw Java application, you will have to modify the following files:
+1) DatabaseUtility.java
+2) StartupSequence.java
+)
+
+
+The project itself can be imported as an Eclipse project.
 
 The application itself should deploy on any Java EE 7 application-server, however, I have only tested it using Wildfly 8.0
 
@@ -45,7 +54,7 @@ This connection should point to the database where you have stored your MSSQL tr
 
 ----------------------------------------------------------------------------------------------------------------------
 !!! !!! !!! You must define a configuration table using the following SQL script !!! !!! !!!
-YOU WILL HAVE TO REPLACE "research" WITH WHATEVER YOU DATABASE NAME YOU ARE USING
+You will have to replace "research" with the name of the database that holds your trace data
 ----------------------------------------------------------------------------------------------------------------------
 USE [research]
 
