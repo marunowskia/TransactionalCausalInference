@@ -144,6 +144,7 @@ public class SequenceAnalyzer {
 		}
 
 		if(currentRuleNode.incrementSupport(positiveExample, eventSource ) == -1) {
+			// This will occur if "currentRuleNode" has already been modified as a result of "eventSource"
 			return null;
 		}
 
