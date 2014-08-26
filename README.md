@@ -5,7 +5,7 @@ TransactionalCausalInference
 Warning?
 ------
 
-I published this experiment to serve as a concept demonstrator (And because it's kinda cool). I cannot recommend this method as a primary, or even secondary, diagnostic approach for investigating poor database performance. There are many simpler metrics you should be looking at first, such as read/write locks and index usages statistics. Database engines are understandably robust (well... mostly (grumble... SQL Server OR statements)), and this project did not find anything that could not be reasonably explained by looking at basic transaction and database properties.
+I published this experiment to serve as a concept demonstrator (And because it's kinda cool). I cannot recommend this method as a primary, or even secondary, diagnostic approach for investigating poor database performance. There are many simpler metrics you should be looking at first, such as read/write locks and index usages statistics. Database engines are (mostly) understandably robust, and this project did not find anything that could not be reasonably explained by looking at basic transaction and database properties.
 
 Who?
 ------
@@ -20,7 +20,9 @@ TransactionalCausalInference is an experiment investigating automatic detection 
 When?
 ------
 
-Uhhh... my free time?
+Uhhh... my free time? 
+
+I had the idea for TransactionalCausalInference while coming up with a final project for a graduate class in Data Mining at Case Western Reserve University. I rewrote it using new knowledge after the conclusion of that course.
 
 Where?
 ------
