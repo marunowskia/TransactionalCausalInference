@@ -22,7 +22,7 @@ When?
 
 Uhhh... my free time? 
 
-I had the idea for TransactionalCausalInference while coming up with a final project for a graduate class in Data Mining at Case Western Reserve University. I rewrote it using new knowledge after the conclusion of that course.
+I had the idea for TransactionalCausalInference while coming up with a final project for a graduate class in Data Mining at Case Western Reserve University in the Spring of 2014. I rewrote it using new knowledge after the conclusion of that course.
 
 Where?
 ------
