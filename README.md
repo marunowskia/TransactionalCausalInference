@@ -1,143 +1,66 @@
-<br>	TransactionalCausalInference
-<br>	============================
-<br>	
-<br>	Performs association-rule mining on frequent subsequences of events.
-<br>	
-<br>	============================
-<br>	
-<br>	What it can do: 
-<br>	
-<br>	
-<br>	This application can be used to detect detrimental performance interactions between transactions running in a database.
-<br>	
-<br>	This is accomplished by performing basic data-mining techniques. 
-<br>	
-<br>	Specifically, the algorithm employed is inspired by both association-rule mining, and frequent subsequence mining.
-<br>	
-<br>	
-<br>	============================
-<br>	
-<br>	Demo:
-<br>	
-<br>	
-<br>	For a demo of how this project looks when it runs, simply run the main method in the following file:<br>
-<br>	"\src\oss\marunowskia\datamining\transactionalcausalinference\StartupSequence.java"<br>
-<br>	
-<br>	============================
-<br>	
-<br>	Running this project without JEE:
-<br>	
-<br>	
-<br>	(
-<br>	For brevity... while still using Java, that is... this project is implemented as a Java EE 7 deployable web-archive. This is primarily for the convenience of using hibernate for ORM.
-<br>	
-<br>	If  you wish to run this project as a raw Java application, you will have to modify the following files:
-<br>	1) DatabaseUtility.java
-<br>	2) StartupSequence.java
-<br>	)
-<br>	
-<br>	============================
-<br>	
-<br>	Running this project with JEE:
-<br>	
-<br>	
-<br>	The project itself can be imported as an Eclipse project.
-<br>	
-<br>	The application itself should deploy on any Java EE 7 application-server, however, I have only tested it using Wildfly 8.0
-<br>	
-<br>	============================
-<br>	
-<br>	Analyzing database trace results:
-<br>	
-<br>	
-<br>	When analyzing a SQL-Server database trace, the trace will have to be stored in a table for ease of retrieval.
-<br>	
-<br>	(	
-<br>	Disclaimer: It is inadvisable to write the results of a MSSQL trace back to the database on which the trace is running.
-<br>		Best case scenario, you'll get a non-characteristic sample of your database transactions.
-<br>		Worst case scenario, you crash your server :)
-<br>	)
-<br>	
-<br>	To analyze your trace data, you will need to specify a database connection in your standalone.xml.
-<br>	This connection should point to the database where you have stored your MSSQL trace.
-<br>	
-<br>	!!!!! The project expects the trace data to be located in "resesarch.dbo.full_trace", but this may be changed directly to wherever your trace data is stored.
-<br>	
-<br>	
-<br>	----------------------------------------------------------------------------------------------------------------------
-<br>	
-<br>	You must define a configuration table using the following SQL script
-<br>	
-<br>	You will have to replace "research" with the name of the database that holds your trace data
-<br>	
-<br>	----------------------------------------------------------------------------------------------------------------------
-<br>	
-<br>	
+=====================================
+TransactionalCausalInference
+=====================================
 
-USE [research]
+Warning?
+------
 
-GO
+I published this experiment to serve as a concept demonstrator (And because it's kinda cool). I cannot recommend this method as a primary, or even secondary, diagnostic approach for investigating poor database performance. There are many simpler metrics you should be looking at first, such as read/write locks and index usages statistics. Database engines are understandably robust (well... mostly (grumble... SQL Server OR statements)), and this project did not find anything that could not be reasonably explained by looking at basic transaction and database properties.
 
-/****** Object:  Table [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG]    Script Date: 8/17/2014 6:10:16 PM ******/
+Who?
+------
 
-SET ANSI_NULLS ON
+Written by Alexander W. Marunowski.
 
-GO
+What?
+------
 
-SET QUOTED_IDENTIFIER ON
+TransactionalCausalInference is an experiment investigating automatic detection of adverse performance interactions that occur between transactions running in a database.
 
-GO
+When?
+------
 
-SET ANSI_PADDING ON
+Uhhh... my free time?
 
-GO
+Where?
+------
+Tested in:
+```
+Platform 1:
+  Windows 8 Profressional (64-bit)
+  SQL Server 2012 Developer (64-bit)
+  Wildfly 8.0
+```
 
-CREATE TABLE [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG](
+```
+Platform 2:
+  Windows 7 Professional (64-bit)
+  SQL Server 2008 R2 Developer (64-bit)
+  JBoss-AS-7.1.1
+```
+Why?
+------
 
-	[CONFIG_NAME] [varchar](MAX) NULL,
-	
-	[CONFIG_VALUE] [varchar](MAX) NULL
-	
-) ON [PRIMARY]
+(Because I'm weird like that)
 
+The inspiration for TransactionalCausalInference came from occasional reports we received that concurrently running two seemingly isolated applications caused performance degradation in one of the applications (by an order of magnitude). 
 
-GO
+Unfortunately, we could not find a sound method for quantitatively verifying these reports without disabling the applications and independently capturing performance metrics. As both systems involved are revenue-critical, we had no chance to disable either for an appreciable amount of time. Furthermore, our test environment did not demonstrate the same performance degradation.
 
-SET ANSI_PADDING OFF
+Even though I successfully tracked down the source of the problems within a day, the thought of having an automatic system which would detect similar types of interference between transactions stuck with me. As it seemed like a cool idea, I eventually got around to experimenting with it.
 
-GO
+How?
+------
 
-INSERT [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG] ([CONFIG_NAME], [CONFIG_VALUE]) VALUES (N'SUPPORT_THRESHOLD', N'500')
+Patterns are detected by building and populating a search tree of event types. Once a node in the search tree has been visited a sufficient number of times, the algorithm will explore super-sequences of that node. The path taken from the root node to any descendant node represents the event seqeunce which is being analyzed. In this manner, the algorithm borrows ideas from sequence mining, pattern growth algorithms, and frequent itemset mining. For detecting transactions that take longer than expected, Welford's method for computing standard deviation on a stream of real values is used.
 
-GO
+Once analysis has progressed reasonably, a list is generated which contains the top #N event sequences which most strongly suggest that an event of interest will occur.
 
-INSERT [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG] ([CONFIG_NAME], [CONFIG_VALUE]) VALUES (N'RULE_DEPTH_LIMIT', N'5')
+How well?
+------
 
-GO
+The included demos showcase reliable extraction of sequence-based association-rules from a streaming event source. Given well suited configuration parameters, the confidence of the extracted rules is typically within one or two percent of what is expected from the sample data.
 
-INSERT [dbo].[TRANSACTIONAL_CAUSAL_INFERENCE_CONFIG] ([CONFIG_NAME], [CONFIG_VALUE]) VALUES (N'HISTORY_LIMIT', N'50')
+The performance of detecting transactions that interfere with specific queries can be improved by limiting the "analyzeEvent" step of the algorithm to only the events of interest. This would reduce runtime by the percent of event types that we are not interested in.
 
-GO
-
-<br>	----------------------------------------------------------------------------------------------------------------------
-<br>	
-<br>	When the application deploys, it will start analyzing the trace automatically, using the values from your config table.
-<br>	
-<br>	
-<br>	
-<br>	============================
-<br>	
-<br>	Background:
-<br>	
-<br>	
-<br>	This project sprang forth from annecdotal evidence of unexpected contention between transactions in our SQL-Server database.
-<br>	
-<br>	I desired a tool which could provide quantitative observations on the degree to which pairs of transactions affect each other.
-<br>	
-<br>	Although I quickly identified the root cause of the database contention, the idea for such a tool stuck.
-<br>	
-<br>	Eventually an opportunity to implement my ideas presented itself: the final-project for a graduate-level course in datamining at Case Western Reserve University.
-<br>	
-<br>	After the course ended, I rewrote the application using insights gained from the feedback I received.
-<br>	
-<br>	============================
+In terms of results of running this project on a large trace, TransactionalCausalInference does in fact detect sequences of transactions that clearly result in poor performance in the last transaction in the sequence. I will publish some statistics in a results section of the main project. 
