@@ -49,7 +49,7 @@ The inspiration for TransactionalCausalInference came from occasional reports we
 
 Unfortunately, we could not find a sound method for quantitatively verifying these reports without disabling the applications and independently capturing performance metrics. As both systems involved are revenue-critical, we had no chance to disable either for an appreciable amount of time. Furthermore, our test environment did not demonstrate the same performance degradation.
 
-Even though I successfully tracked down the source of the problems within a day, the thought of having an automatic system which would detect similar types of interference between transactions stuck with me. As it seemed like a cool idea, I eventually got around to experimenting with it.
+Even though I successfully tracked down the source of the problems within a day, the thought of having an automatic system which would detect similar types of interference between transactions stuck with me. As it seemed like a cool idea, I kept tinkering with it, and that's what you see here.
 
 How?
 ------
